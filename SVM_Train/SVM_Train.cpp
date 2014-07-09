@@ -11,11 +11,43 @@ using namespace std;
 using namespace cv;
 
 //函数声明
-int Train();
 int train(char* positivePath, int positiveSampleCount, 
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
 void pictureDetect(Mat img, char* svmDetectorPath);
-void VideoDetect();
+
+class Mysvm: public CvSVM
+{
+public:
+	int get_alpha_count()
+	{
+		return this->sv_total;
+	}
+
+	int get_sv_dim()
+	{
+		return this->var_all;
+	}
+
+	int get_sv_count()
+	{
+		return this->decision_func->sv_count;
+	}
+
+	double* get_alpha()
+	{
+		return this->decision_func->alpha;
+	}
+
+	float** get_sv()
+	{
+		return this->sv;
+	}
+
+	float get_rho()
+	{
+		return this->decision_func->rho;
+	}
+};
 
 int main(int argc, char* argv[])
 {
@@ -23,7 +55,7 @@ int main(int argc, char* argv[])
 	{
 		cout << "开始训练" << endl;
 		int trainFlag = train("E:\\SmartCity\\正样本\\正样本_完整单一人形_13\\", 865, 
-			"E:\\SmartCity\\负样本\\负样本13(自动截)\\64x128\\", 775, "E:\\SmartCity\\Result\\Result13\\");
+			"E:\\SmartCity\\负样本\\负样本13(自动截)\\64x128\\", 775, "E:\\SmartCity\\Result\\Result13_RBF\\");
 	}
 
 	if(  1  ) //设置要不要检测
@@ -37,7 +69,7 @@ int main(int argc, char* argv[])
 			system("pause");
 			return -1;
 		}
-		pictureDetect(img, "E:\\SmartCity\\Result\\12472+856_RBF\\SVMDetector.txt");
+		pictureDetect(img, "E:\\SmartCity\\Result\\Result13_RBF\\SVMDetector.txt");
 	}
 
 	system("pause");
@@ -172,22 +204,27 @@ int train(char* positivePath, int positiveSampleCount,
 	cout<<"end of training for negative samples."<<endl;
 	cout<<"********************************************************"<<endl;
 	cout<<"start to train for SVM classifier."<<endl;
+	
+	//设置训练参数
+	//CvSVMParams params;  
+	//params.svm_type = CvSVM::C_SVC;  
+	//params.kernel_type = CvSVM::LINEAR;  
+	//params.C = 0.01;   // 默认时C＝1
+	//params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 1000, FLT_EPSILON);
+	CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, FLT_EPSILON); 
+		//迭代终止条件，当迭代满1000次或误差小于FLT_EPSILON时停止迭代
+	CvSVMParams params(CvSVM::C_SVC, CvSVM::RBF, 0, 1, 0, 0.01, 0, 0, 0, criteria);
+		//SVM参数：SVM类型为C_SVC；线性核函数；松弛因子C=0.01
 
 	//开始训练SVM
-	CvSVMParams params;  
-	params.svm_type = CvSVM::C_SVC;  
-	params.kernel_type = CvSVM::RBF;  
-	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 1000, FLT_EPSILON);
-	params.C = 0.01;   // 默认时C＝1
-
 	Mysvm svm;
 	svm.train( sampleFeaturesMat, sampleLabelMat, 0, 0, params ); //用SVM分类器训练
 	// train(const CvMat* trainData, const CvMat* responses, const CvMat* varIdx=0, 
 	// const CvMat* sampleIdx=0, CvSVMParams params=CvSVMParams() )
 	char* trainSavePath = new char[200];
 	strcpy(trainSavePath, classifierSavePath);
-	strcat(trainSavePath, "ResultOfTrain.txt");
-	svm.save(trainSavePath);  //存储训练结果
+	strcat(trainSavePath, "SVM_HOG.xml");
+	svm.save(trainSavePath, 0);  //存储训练结果
 	cout<< trainSavePath <<"训练结果保存完毕" << endl;
 
 	delete [] trainSavePath;
@@ -265,7 +302,7 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	float val = 0.0f;
 	while(!fileIn.eof())
 	{
-		fileIn>>val;
+		fileIn >> val;
 		x.push_back(val);
 	}
 	fileIn.close();
@@ -274,8 +311,8 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), Size block_stride=Size(8, 8), 
 	// Size cell_size=Size(8, 8), int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
 	// bool gamma_correction=true, int nlevels=DEFAULT_NLEVELS)
-	hog.setSVMDetector(x);//训练的分类器
-//	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
+	hog.setSVMDetector(x); //训练的分类器
+	//hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
 
 	//cvNamedWindow("img", 0);
 
@@ -290,14 +327,21 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 		cout << "矩形框数目："<< found.size() << endl;
 		for(int i = 0; i < found.size(); i++)
 		{
-			rectangle(img, found[i], Scalar(0, 0, 255), 2); //在图像上画出矩形
+			rectangle(img, found[i], Scalar(0, 255, 0), 2); //在图像上画出矩形
+
+			/*Rect r = found[i];
+			r.x += cvRound(r.width*0.1);
+			r.width = cvRound(r.width*0.8);
+			r.y += cvRound(r.height*0.07);
+			r.height = cvRound(r.height*0.8);
+			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
 		}
 	}
 
 	time_t endTime = time(NULL);	//记录结束时间
 	cout <<"检测所用时间：" << difftime(endTime, startTime) << "秒" << endl; //打印训练用时
 
-	cvNamedWindow("检测行人", CV_WINDOW_NORMAL);
+	cvNamedWindow("检测行人", CV_WINDOW_AUTOSIZE);
 	imshow("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
@@ -305,36 +349,4 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	waitKey(0);
 }
 
-class Mysvm: public CvSVM
-{
-public:
-	int get_alpha_count()
-	{
-		return this->sv_total;
-	}
 
-	int get_sv_dim()
-	{
-		return this->var_all;
-	}
-
-	int get_sv_count()
-	{
-		return this->decision_func->sv_count;
-	}
-
-	double* get_alpha()
-	{
-		return this->decision_func->alpha;
-	}
-
-	float** get_sv()
-	{
-		return this->sv;
-	}
-
-	float get_rho()
-	{
-		return this->decision_func->rho;
-	}
-};
