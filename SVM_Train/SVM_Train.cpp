@@ -13,7 +13,7 @@ using namespace cv;
 //函数声明
 int train(char* positivePath, int positiveSampleCount, 
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
-void pictureDetect(Mat img, char* svmDetectorPath);
+void pictureDetect(IplImage* img, char* svmDetectorPath);
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 
 class Mysvm: public CvSVM
@@ -61,10 +61,11 @@ int main(int argc, char* argv[])
 
 	if( 1 ) //设置要不要检测
 	{
-		Mat img;
+		IplImage* img = NULL;
+		
 		//img = imread("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilouwest_14_1920x1080_30_R1\\0004001.jpg");
-		img = imread("E:\\SmartCity\\pic2.jpg");
-		if(img.data == NULL)
+		img = cvLoadImage("E:\\SmartCity\\pic2.jpg");
+		if(img == NULL)
 		{
 			printf("没有图片\n");
 			system("pause");
@@ -294,7 +295,7 @@ int train(char* positivePath, int positiveSampleCount,
 	return 1;
 }
 
-void pictureDetect(Mat img, char* svmDetectorPath)
+void pictureDetect(IplImage* img, char* svmDetectorPath)
 {	
 	time_t startTime = time(NULL);	//记录开始时间
 
@@ -339,8 +340,8 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 		// 保存样本截图
 		for(int i = 0; i < found.size(); i++)
 		{
-			if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img.cols) 
-				&& (found[i].y >= 0) && (found[i].y + found[i].height <= img.rows))
+			if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img->width) 
+				&& (found[i].y >= 0) && (found[i].y + found[i].height <= img->height))
 			{
 				char* name = new char[100]; //文件名
 				char* prePath = new char[200]; // 文件夹路径
@@ -351,9 +352,9 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 
 				cout << prePath << endl;
 
-				IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
-				image = cvGetImage(&img, image);
-				saveDetectResult(image, found[i], prePath); //保存截图
+				/*IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
+				image = cvGetImage(&img, image);*/
+				saveDetectResult(img, found[i], prePath); //保存截图
 				cout << prePath << " 保存完毕。" << endl;
 
 				delete[] name;
@@ -364,8 +365,8 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 		//在图像上画出矩形
 		for(int i = 0; i < found.size(); i++)
 		{
-			rectangle(img, found[i], Scalar(0, 255, 0), 3); 
-
+			cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0, 255, 0), 3); 
+			
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
 			r.width = cvRound(r.width*0.8);
@@ -379,7 +380,7 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	cout <<"检测所用时间：" << difftime(endTime, startTime) << "秒" << endl; //打印训练用时
 
 	cvNamedWindow("检测行人", CV_WINDOW_NORMAL);
-	imshow("检测行人", img);
+	cvShowImage("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
 //	cvSaveImage("e:/SmartCity/ProcessedImage.jpg", &img, NULL);
