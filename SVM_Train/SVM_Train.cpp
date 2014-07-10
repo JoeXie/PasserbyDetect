@@ -14,6 +14,7 @@ using namespace cv;
 int train(char* positivePath, int positiveSampleCount, 
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
 void pictureDetect(Mat img, char* svmDetectorPath);
+void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 
 class Mysvm: public CvSVM
 {
@@ -51,25 +52,25 @@ public:
 
 int main(int argc, char* argv[])
 {
-	if(  0  ) //设置要不要训练
+	if( 0 ) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
-		int trainFlag = train("E:\\SmartCity\\正样本\\正样本_完整单一人形_13\\", 865, 
-			"E:\\SmartCity\\负样本\\负样本13(自动截)\\64x128\\", 775, "E:\\SmartCity\\Result\\Result13_RBF\\");
+		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_13\\64x128\\", 142, 
+			"E:\\SmartCity\\负样本\\负样本13\\64x128\\", 322, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 
-	if(  1  ) //设置要不要检测
+	if( 1 ) //设置要不要检测
 	{
 		Mat img;
-		//img = imread("E:\\智慧城市\\智慧城市WD\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0005651.jpg");
-		img = imread("e:/smartcity/pic.jpg");
+		//img = imread("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilouwest_14_1920x1080_30_R1\\0004001.jpg");
+		img = imread("E:\\SmartCity\\pic2.jpg");
 		if(img.data == NULL)
 		{
 			printf("没有图片\n");
 			system("pause");
 			return -1;
 		}
-		pictureDetect(img, "E:\\SmartCity\\Result\\Result13_RBF\\SVMDetector.txt");
+		pictureDetect(img, "E:\\SmartCity\\Result\\Temp\\SVMDetector.txt");
 	}
 
 	system("pause");
@@ -119,7 +120,7 @@ int train(char* positivePath, int positiveSampleCount,
 		strcat(positiveImagePath,positiveImageName); //将第二个字符串拼接到第一个后面
 		printf("%s\n",positiveImagePath); //打印出完整文件路径名
 
-		cv::Mat img = cv::imread(positiveImagePath);
+		Mat img = cv::imread(positiveImagePath);
 		if(img.data == NULL)
 		{
 			cout<<"negative image sample load error: "<<positiveImagePath<<endl;
@@ -213,8 +214,9 @@ int train(char* positivePath, int positiveSampleCount,
 	//params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 1000, FLT_EPSILON);
 	CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, FLT_EPSILON); 
 		//迭代终止条件，当迭代满1000次或误差小于FLT_EPSILON时停止迭代
-	CvSVMParams params(CvSVM::C_SVC, CvSVM::RBF, 0, 1, 0, 0.01, 0, 0, 0, criteria);
+	CvSVMParams params(CvSVM::C_SVC, CvSVM::LINEAR, 0, 1, 0, 0.01, 0, 0, 0, criteria);
 		//SVM参数：SVM类型为C_SVC；线性核函数；松弛因子C=0.01
+	cout << "训练参数：" << params.svm_type <<", "<< params.kernel_type<< endl;
 
 	//开始训练SVM
 	Mysvm svm;
@@ -250,7 +252,7 @@ int train(char* positivePath, int positiveSampleCount,
 		memcpy( (float*)(sv->data.fl+i*3780), svm.get_support_vector(i), 3780*sizeof(float));	//复制特征向量
 	}
 
-	double* alphaArr = svm.get_alpha();   //看不懂这一段,难道是透明度？
+	double* alphaArr = svm.get_alpha();   
 	int alphaCount = svm.get_alpha_count();
 
 	for(int i=0; i<supportVectorCount; i++)
@@ -280,8 +282,8 @@ int train(char* positivePath, int positiveSampleCount,
 	}
 
 	float rho = svm.get_rho();
-	fprintf(fp, "%f", rho);
-	cout<< SVMDetectorSavePath <<"支持向量保存完毕"<<endl;//保存支持向量
+	fprintf(fp, "%f", rho); //保存分类器
+	cout<< SVMDetectorSavePath <<"支持向量保存完毕"<<endl;
 
 	delete [] SVMDetectorSavePath;
 	fclose(fp);
@@ -306,13 +308,21 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 		x.push_back(val);
 	}
 	fileIn.close();
+	
+	if (x.size() == 3781)
+		cout << svmDetectorPath << "分类器导入成功！" << endl;
+	else
+	{
+		cout << "分类器导入错误。" <<endl;
+		return;
+	}
 
 	cv::HOGDescriptor hog(cv::Size(64,128), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
 	// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), Size block_stride=Size(8, 8), 
 	// Size cell_size=Size(8, 8), int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
 	// bool gamma_correction=true, int nlevels=DEFAULT_NLEVELS)
 	hog.setSVMDetector(x); //训练的分类器
-	//hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
+//	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
 
 	//cvNamedWindow("img", 0);
 
@@ -325,9 +335,36 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	if (found.size() > 0) 
 	{
 		cout << "矩形框数目："<< found.size() << endl;
+
+		// 保存样本截图
 		for(int i = 0; i < found.size(); i++)
 		{
-			rectangle(img, found[i], Scalar(0, 255, 0), 2); //在图像上画出矩形
+			if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img.cols) 
+				&& (found[i].y >= 0) && (found[i].y + found[i].height <= img.rows))
+			{
+				char* name = new char[100]; //文件名
+				char* prePath = new char[200]; // 文件夹路径
+				itoa(i, name, 10);
+				strcat(name, ".png"); //构成文件名 i.png
+				strcpy(prePath, "E:\\SmartCity\\Result\\SaveDetectResult\\"); 
+				strcat(prePath, name); //形成完整路径
+
+				cout << prePath << endl;
+
+				IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
+				image = cvGetImage(&img, image);
+				saveDetectResult(image, found[i], prePath); //保存截图
+				cout << prePath << " 保存完毕。" << endl;
+
+				delete[] name;
+				delete[] prePath;
+			}
+		}
+
+		//在图像上画出矩形
+		for(int i = 0; i < found.size(); i++)
+		{
+			rectangle(img, found[i], Scalar(0, 255, 0), 3); 
 
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
@@ -341,7 +378,7 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	time_t endTime = time(NULL);	//记录结束时间
 	cout <<"检测所用时间：" << difftime(endTime, startTime) << "秒" << endl; //打印训练用时
 
-	cvNamedWindow("检测行人", CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("检测行人", CV_WINDOW_NORMAL);
 	imshow("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
@@ -349,4 +386,14 @@ void pictureDetect(Mat img, char* svmDetectorPath)
 	waitKey(0);
 }
 
+void saveDetectResult(IplImage* img, CvRect rect, char* savePath)
+{
+	CvMat *subMat = cvCreateMatHeader(rect.width, rect.height, CV_8UC3); //创建一个rect.width * rect.height的矩阵头
 
+	subMat = cvGetSubRect(img, subMat, rect); //pImg为指向图像的指针，subMat指向存储所接图像的矩阵，返回值和subMat相等
+
+	IplImage *subImg = cvCreateImageHeader(cvSize(rect.width, rect.height), 8, 3); //创建一个rect.width * rect.height的图像头
+	cvGetImage(subMat, subImg); //subMat为存储数据的矩阵，SubImg指向图像，返回值与SubImg相等
+
+	cvSaveImage(savePath, subImg, 0);
+}
