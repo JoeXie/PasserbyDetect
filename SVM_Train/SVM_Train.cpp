@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 			"E:\\SmartCity\\负样本\\Neg_Auto_13\\64x128\\", 424, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 
-	if( 0 ) //设置要不要检测
+	if( 1 ) //设置要不要检测
 	{
 		IplImage* img = NULL;
 		
@@ -303,6 +303,7 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 	// detectMultiScale(const GpuMat& img, vector<Rect>& found_locations, double hit_threshold=0, 
 	// Size win_stride=Size(), Size padding=Size(), double scale0=1.05, int group_threshold=2)
 
+
 	if (found.size() > 0) 
 	{
 		cout << "矩形框数目："<< found.size() << endl;
@@ -332,6 +333,9 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 			}
 		}
 
+
+
+
 		//去嵌套
 		Vector<Rect> found_NoNest;
 		int ii = 0;
@@ -346,27 +350,51 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
             if(ii == found.size())
                found_NoNest.push_back(r);
 		}
+		cout << "去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
 
 		//去重叠
 		Vector<Rect> found_NoOverlap;
 		for (int i = 0; i < found_NoNest.size(); i++)
 		{
-			
+			MyRect rect1(found_NoNest[i]);
+			for(int j = i+1; j < found_NoNest.size(); j++)
+			{
+				MyRect rect2(found_NoNest[j]);
+				MyRect rect3 = rect1 & rect2;
+				float rate1 = ((float) rect3.getAera()) / ((float) rect1.getAera());
+				float rate2 = ((float) rect3.getAera()) / ((float) rect2.getAera());
+
+				if(rate1 > 0.5 || rate2 > 0.5)
+				{
+					////取最小的包括rect1和rect2的框
+					//MyRect rect4 = rect1 | rect2;
+					//found_NoOverlap.push_back(rect4); 
+					//留下大的框
+					if(rate1 > rate2)
+					{
+						found_NoOverlap.push_back(rect2);
+						continue;;
+					}
+					else 
+					{
+						found_NoOverlap.push_back(rect1);
+						continue;
+					}
+				}
+
+				if(j == found_NoNest.size()-1)
+					found_NoOverlap.push_back(rect1);	
+			}
 		}
+		cout << "去重叠后，矩形框数目："<< found_NoOverlap.size() << endl;
 	
 
 		 
 
 		//在图像上画出矩形
-
-		for(int i = 0; i < found.size(); i++)
+		for(int i = 0; i < found_NoOverlap.size(); i++)
 		{
-			
-
-
-			cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0, 255, 0), 3); 
-			
-
+			cvRectangle(img, found_NoOverlap[i].tl(), found_NoOverlap[i].br(), Scalar(0,255,0), 3);
 
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
@@ -375,6 +403,9 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 			r.height = cvRound(r.height*0.8);
 			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
 		}
+
+
+
 	}
 
 	time_t endTime = time(NULL);	//记录结束时间
