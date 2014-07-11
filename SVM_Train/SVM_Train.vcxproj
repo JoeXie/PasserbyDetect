@@ -111,7 +111,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MyRect.cpp" />
     <ClCompile Include="SVM_Train.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MyRect.h" />
+    <ClInclude Include="Mysvm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

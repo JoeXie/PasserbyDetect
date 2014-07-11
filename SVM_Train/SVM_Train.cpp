@@ -1,4 +1,6 @@
 #include <opencv2/opencv.hpp>
+#include "Mysvm.h"
+#include "MyRect.h"
 
 #include <ml.h>  
 #include <iostream>  
@@ -16,62 +18,30 @@ int train(char* positivePath, int positiveSampleCount,
 void pictureDetect(IplImage* img, char* svmDetectorPath);
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 
-class Mysvm: public CvSVM
-{
-public:
-	int get_alpha_count()
-	{
-		return this->sv_total;
-	}
 
-	int get_sv_dim()
-	{
-		return this->var_all;
-	}
-
-	int get_sv_count()
-	{
-		return this->decision_func->sv_count;
-	}
-
-	double* get_alpha()
-	{
-		return this->decision_func->alpha;
-	}
-
-	float** get_sv()
-	{
-		return this->sv;
-	}
-
-	float get_rho()
-	{
-		return this->decision_func->rho;
-	}
-};
 
 int main(int argc, char* argv[])
 {
 	if( 0 ) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
-		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_13\\64x128\\", 142, 
-			"E:\\SmartCity\\负样本\\负样本13\\64x128\\", 322, "E:\\SmartCity\\Result\\Result_13\\");
+		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_Mixed\\", 290, 
+			"E:\\SmartCity\\负样本\\Neg_Auto_13\\64x128\\", 424, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 
-	if( 1 ) //设置要不要检测
+	if( 0 ) //设置要不要检测
 	{
 		IplImage* img = NULL;
 		
-		//img = imread("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilouwest_14_1920x1080_30_R1\\0004001.jpg");
-		img = cvLoadImage("E:\\SmartCity\\pic2.jpg");
+		img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0005926.jpg");
+		//img = cvLoadImage("E:\\SmartCity\\004.jpg");
 		if(img == NULL)
 		{
 			printf("没有图片\n");
 			system("pause");
 			return -1;
 		}
-		pictureDetect(img, "E:\\SmartCity\\Result\\Temp\\SVMDetector.txt");
+		pictureDetect(img, "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt");
 	}
 
 	system("pause");
@@ -362,11 +332,42 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 			}
 		}
 
-		//在图像上画出矩形
+		//去嵌套
+		Vector<Rect> found_NoNest;
+		int ii = 0;
 		for(int i = 0; i < found.size(); i++)
 		{
+			Rect r = found[i];
+			//下面的这个for语句是找出所有没有嵌套的矩形框r,并放入found_NoNest中,如果有嵌套的
+			//话,则取外面最大的那个矩形框放入found_NoNest中
+            for(ii = 0; ii <found.size(); ii++)
+                if(ii != i && (r&found[ii])==r)
+                    break;
+            if(ii == found.size())
+               found_NoNest.push_back(r);
+		}
+
+		//去重叠
+		Vector<Rect> found_NoOverlap;
+		for (int i = 0; i < found_NoNest.size(); i++)
+		{
+			
+		}
+	
+
+		 
+
+		//在图像上画出矩形
+
+		for(int i = 0; i < found.size(); i++)
+		{
+			
+
+
 			cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0, 255, 0), 3); 
 			
+
+
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
 			r.width = cvRound(r.width*0.8);
