@@ -22,19 +22,19 @@ void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 
 int main(int argc, char* argv[])
 {
-	if( 0 ) //设置要不要训练
+	if( 0) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
 		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_Mixed\\", 290, 
-			"E:\\SmartCity\\负样本\\Neg_Auto_13\\64x128\\", 424, "E:\\SmartCity\\Result\\Result_13\\");
+			"E:\\SmartCity\\负样本\\负样本13\\64x128\\", 322, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 
 	if( 1 ) //设置要不要检测
 	{
 		IplImage* img = NULL;
 		
-		img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0005926.jpg");
-		//img = cvLoadImage("E:\\SmartCity\\004.jpg");
+		//img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0008156.jpg");
+		img = cvLoadImage("E:\\SmartCity\\004.jpg");
 		if(img == NULL)
 		{
 			printf("没有图片\n");
@@ -390,18 +390,12 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 
 		 
 
-		//在图像上画出矩形
-		for(int i = 0; i < found_NoOverlap.size(); i++)
-		{
-			cvRectangle(img, found_NoOverlap[i].tl(), found_NoOverlap[i].br(), Scalar(0,255,0), 3);
+		//在图像上画出矩形 （去重后的）
+	//	for(int i = 0; i < found_NoOverlap.size(); i++)
+	//	{
+	//		cvRectangle(img, found_NoOverlap[i].tl(), found_NoOverlap[i].br(), Scalar(0,255,0), 3);
 
-			/*Rect r = found[i];
-			r.x += cvRound(r.width*0.1);
-			r.width = cvRound(r.width*0.8);
-			r.y += cvRound(r.height*0.07);
-			r.height = cvRound(r.height*0.8);
-			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
-		}
+		//}
 
 		//在图像上画出矩形
 		for(int i = 0; i < found.size(); i++)
