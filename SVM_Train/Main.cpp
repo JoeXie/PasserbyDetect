@@ -44,7 +44,6 @@ int main(int argc, char* argv[])
 		pictureDetect(img, "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt");
 	}
 
-	system("pause");
 	return 1;
 }
 
@@ -404,6 +403,19 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
 		}
 
+		//在图像上画出矩形
+		for(int i = 0; i < found.size(); i++)
+		{
+			cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0,255,0), 3);
+
+			/*Rect r = found[i];
+			r.x += cvRound(r.width*0.1);
+			r.width = cvRound(r.width*0.8);
+			r.y += cvRound(r.height*0.07);
+			r.height = cvRound(r.height*0.8);
+			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
+		}
+
 
 
 	}
@@ -415,7 +427,7 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 	cvShowImage("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
-//	cvSaveImage("e:/SmartCity/ProcessedImage.jpg", &img, NULL);
+	cvSaveImage("e:/SmartCity/ProcessedImage.jpg", img, NULL);
 	waitKey(0);
 }
 
