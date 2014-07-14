@@ -22,21 +22,22 @@ void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 
 int main(int argc, char* argv[])
 {
-	if( 0) //设置要不要训练
+	if( 0 ) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
 		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_Mixed\\", 290, 
-			"E:\\SmartCity\\负样本\\负样本13\\64x128\\", 322, "E:\\SmartCity\\Result\\Result_13\\");
+			"E:\\SmartCity\\负样本\\Neg_13\\64x128\\", 449, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 
 	if( 1 ) //设置要不要检测
 	{
 		IplImage* img = NULL;
 		
-		//img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0008156.jpg");
-		img = cvLoadImage("E:\\SmartCity\\004.jpg");
+		img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0005411.jpg");
+		//img = cvLoadImage("E:\\SmartCity\\004.jpg");
 		if(img == NULL)
 		{
+			
 			printf("没有图片\n");
 			system("pause");
 			return -1;
@@ -307,32 +308,55 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 	{
 		cout << "矩形框数目："<< found.size() << endl;
 
-		// 保存样本截图
+		//// 保存样本截图
+		//for(int i = 0; i < found.size(); i++)
+		//{
+		//	if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img->width) 
+		//		&& (found[i].y >= 0) && (found[i].y + found[i].height <= img->height))
+		//	{
+		//		char* name = new char[100]; //文件名
+		//		char* prePath = new char[200]; // 文件夹路径
+		//		itoa(i, name, 10);
+		//		strcat(name, ".png"); //构成文件名 i.png
+		//		strcpy(prePath, "E:\\SmartCity\\Result\\SaveDetectResult\\"); 
+		//		strcat(prePath, name); //形成完整路径
+
+		//		cout << prePath << endl;
+
+		//		/*IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
+		//		image = cvGetImage(&img, image);*/
+		//		saveDetectResult(img, found[i], prePath); //保存截图
+		//		cout << prePath << " 保存完毕。" << endl;
+
+		//		delete[] name;
+		//		delete[] prePath;
+		//	}
+		//}
+
+
+		//去除在图像边缘上的方框
+		Vector<Rect> found_NoMinus;
 		for(int i = 0; i < found.size(); i++)
 		{
-			if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img->width) 
-				&& (found[i].y >= 0) && (found[i].y + found[i].height <= img->height))
+			if(found[i].x > 0  &&  found[i].y > 0  &&  
+				found[i].x + found[i].width < 1920  &&  found[i].y + found[i].height < 1080)
 			{
-				char* name = new char[100]; //文件名
-				char* prePath = new char[200]; // 文件夹路径
-				itoa(i, name, 10);
-				strcat(name, ".png"); //构成文件名 i.png
-				strcpy(prePath, "E:\\SmartCity\\Result\\SaveDetectResult\\"); 
-				strcat(prePath, name); //形成完整路径
+				//found_NoMinus.push_back(found[i]);
+				cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0,255,0), 3);
+				char* str = new char[];
+				itoa(i, str, 10);
+				CvFont font;
+				cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
+					//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
+				cvPutText(img, str, found[i].br(), &font, Scalar(0, 0, 255)); //画出编号
 
-				cout << prePath << endl;
+				cout << found[i].x << ", " << found[i].y <<endl;
+				cout << found[i].x + found[i].width << ", " << found[i].y + found[i].height <<endl;
+				cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 
-				/*IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
-				image = cvGetImage(&img, image);*/
-				saveDetectResult(img, found[i], prePath); //保存截图
-				cout << prePath << " 保存完毕。" << endl;
-
-				delete[] name;
-				delete[] prePath;
+				delete[] str;
 			}
 		}
-
-
 
 
 		//去嵌套
@@ -350,6 +374,7 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
                found_NoNest.push_back(r);
 		}
 		cout << "去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
+
 
 		//去重叠
 		Vector<Rect> found_NoOverlap;
@@ -397,18 +422,18 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 
 		//}
 
-		//在图像上画出矩形
-		for(int i = 0; i < found.size(); i++)
-		{
-			cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0,255,0), 3);
+		////在图像上画出矩形
+		//for(int i = 0; i < found_NoMinus.size(); i++)
+		//{
+		//	cvRectangle(img, found_NoMinus[i].tl(), found_NoMinus[i].br(), Scalar(0,255,0), 3);
 
-			/*Rect r = found[i];
-			r.x += cvRound(r.width*0.1);
-			r.width = cvRound(r.width*0.8);
-			r.y += cvRound(r.height*0.07);
-			r.height = cvRound(r.height*0.8);
-			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
-		}
+		//	/*Rect r = found[i];
+		//	r.x += cvRound(r.width*0.1);
+		//	r.width = cvRound(r.width*0.8);
+		//	r.y += cvRound(r.height*0.07);
+		//	r.height = cvRound(r.height*0.8);
+		//	rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
+		//}
 
 
 
