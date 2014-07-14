@@ -64,7 +64,7 @@ int main()
 	}
 	cvDestroyWindow("video");
 	cvDestroyWindow("background");
-	cvDestroyWindow("foreground");
+	cvDestroyWindow("foreground");d
 	cvReleaseImage(&pFrImg);
 	cvReleaseImage(&pBkImg);
 	cvReleaseMat(&pFrameMat);
