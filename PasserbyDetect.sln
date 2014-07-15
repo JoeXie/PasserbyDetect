@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train", "SVM_Train\SVM_Train.vcproj", "{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "去背景", "去背景\去背景.vcproj", "{7A30A863-4BA8-447A-BEA3-80402309D9EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}.Debug|Win32.Build.0 = Debug|Win32
 		{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}.Release|Win32.ActiveCfg = Release|Win32
 		{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}.Release|Win32.Build.0 = Release|Win32
+		{7A30A863-4BA8-447A-BEA3-80402309D9EA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A30A863-4BA8-447A-BEA3-80402309D9EA}.Debug|Win32.Build.0 = Debug|Win32
+		{7A30A863-4BA8-447A-BEA3-80402309D9EA}.Release|Win32.ActiveCfg = Release|Win32
+		{7A30A863-4BA8-447A-BEA3-80402309D9EA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

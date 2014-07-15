@@ -341,20 +341,7 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 			if(found[i].x > 0  &&  found[i].y > 0  &&  
 				found[i].x + found[i].width < 1920  &&  found[i].y + found[i].height < 1080)
 			{
-				//found_NoMinus.push_back(found[i]);
-				cvRectangle(img, found[i].tl(), found[i].br(), Scalar(0,255,0), 3);
-				char* str = new char[];
-				itoa(i, str, 10);
-				CvFont font;
-				cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
-					//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
-				cvPutText(img, str, found[i].br(), &font, Scalar(0, 0, 255)); //画出编号
-
-				cout << found[i].x << ", " << found[i].y <<endl;
-				cout << found[i].x + found[i].width << ", " << found[i].y + found[i].height <<endl;
-				cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
-
-				delete[] str;
+				found_NoMinus.push_back(found[i]);
 			}
 		}
 
@@ -362,15 +349,15 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 		//去嵌套
 		Vector<Rect> found_NoNest;
 		int ii = 0;
-		for(int i = 0; i < found.size(); i++)
+		for(int i = 0; i < found_NoMinus.size(); i++)
 		{
-			Rect r = found[i];
+			Rect r = found_NoMinus[i];
 			//下面的这个for语句是找出所有没有嵌套的矩形框r,并放入found_NoNest中,如果有嵌套的
 			//话,则取外面最大的那个矩形框放入found_NoNest中
-            for(ii = 0; ii <found.size(); ii++)
-                if(ii != i && (r&found[ii])==r)
+            for(ii = 0; ii <found_NoMinus.size(); ii++)
+                if(ii != i && (r&found_NoMinus[ii])==r)
                     break;
-            if(ii == found.size())
+            if(ii == found_NoMinus.size())
                found_NoNest.push_back(r);
 		}
 		cout << "去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
@@ -381,59 +368,42 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 		for (int i = 0; i < found_NoNest.size(); i++)
 		{
 			MyRect rect1(found_NoNest[i]);
-			for(int j = i+1; j < found_NoNest.size(); j++)
+			for(int j = 0; j < found_NoNest.size(); j++)
 			{
 				MyRect rect2(found_NoNest[j]);
 				MyRect rect3 = rect1 & rect2;
-				float rate1 = ((float) rect3.getAera()) / ((float) rect1.getAera());
-				float rate2 = ((float) rect3.getAera()) / ((float) rect2.getAera());
 
-				if(rate1 > 0.5 || rate2 > 0.5)
-				{
-					////取最小的包括rect1和rect2的框
-					//MyRect rect4 = rect1 | rect2;
-					//found_NoOverlap.push_back(rect4); 
-					//留下大的框
-					if(rate1 > rate2)
-					{
-						found_NoOverlap.push_back(rect2);
-						continue;;
-					}
-					else 
-					{
-						found_NoOverlap.push_back(rect1);
-						continue;
-					}
-				}
 
-				if(j == found_NoNest.size()-1)
-					found_NoOverlap.push_back(rect1);	
+
+				 
+
 			}
 		}
 		cout << "去重叠后，矩形框数目："<< found_NoOverlap.size() << endl;
 	
 
-		 
 
-		//在图像上画出矩形 （去重后的）
-	//	for(int i = 0; i < found_NoOverlap.size(); i++)
-	//	{
-	//		cvRectangle(img, found_NoOverlap[i].tl(), found_NoOverlap[i].br(), Scalar(0,255,0), 3);
+		//在图像上画出矩形
+		for(int i = 0; i < found_NoNest.size(); i++)
+		{
+			cvRectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
 
-		//}
+			//在方框上标出编号
+			char* str = new char[];
+			itoa(i, str, 10);
+			CvFont font;
+			cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
+				//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
+			cvPutText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
+			delete[] str;
 
-		////在图像上画出矩形
-		//for(int i = 0; i < found_NoMinus.size(); i++)
-		//{
-		//	cvRectangle(img, found_NoMinus[i].tl(), found_NoMinus[i].br(), Scalar(0,255,0), 3);
-
-		//	/*Rect r = found[i];
-		//	r.x += cvRound(r.width*0.1);
-		//	r.width = cvRound(r.width*0.8);
-		//	r.y += cvRound(r.height*0.07);
-		//	r.height = cvRound(r.height*0.8);
-		//	rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
-		//}
+			/*Rect r = found[i];
+			r.x += cvRound(r.width*0.1);
+			r.width = cvRound(r.width*0.8);
+			r.y += cvRound(r.height*0.07);
+			r.height = cvRound(r.height*0.8);
+			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
+		}
 
 
 
@@ -446,8 +416,11 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 	cvShowImage("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
-	cvSaveImage("e:/SmartCity/ProcessedImage.jpg", img, NULL);
+	cvSaveImage("e:/SmartCity/ProcessedImage2.jpg", img, NULL);
 	waitKey(0);
+
+	cvDestroyWindow("检测行人");
+	cvReleaseImage(&img);
 }
 
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath)
