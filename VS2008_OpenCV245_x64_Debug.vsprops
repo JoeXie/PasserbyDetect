@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="gb2312"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="VS2008_OpenCV245_x86_64_Debug"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="D:\OpenCV245\opencv\build\include;D:\OpenCV245\opencv\build\include\opencv;D:\OpenCV245\opencv\build\include\opencv2"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalDependencies="opencv_videostab245d.lib opencv_core245d.lib opencv_flann245d.lib opencv_imgproc245d.lib opencv_ml245d.lib opencv_photo245d.lib opencv_video245d.lib opencv_highgui245d.lib opencv_features2d245d.lib opencv_objdetect245d.lib opencv_calib3d245d.lib opencv_ts245d.lib opencv_legacy245d.lib opencv_contrib245d.lib opencv_gpu245d.lib opencv_haartraining_engined.lib opencv_nonfree245d.lib opencv_superres245d.lib opencv_stitching245d.lib"
+		AdditionalLibraryDirectories="D:\OpenCV245\opencv\build\x86\vc9\lib;D:\OpenCV245\opencv\build\x86\vc9\staticlib;D:\OpenCV245\opencv\build\x64\vc9\lib;D:\OpenCV245\opencv\build\x64\vc9\staticlib"
+	/>
+</VisualStudioPropertySheet>
