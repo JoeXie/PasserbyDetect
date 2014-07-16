@@ -17,32 +17,75 @@ int train(char* positivePath, int positiveSampleCount,
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
 void pictureDetect(IplImage* img, char* svmDetectorPath);
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
-
+vector<float> loadSVMDetector(char* path);
+IplImage* detect(IplImage* img, vector<float> SVMDetector);
 
 
 int main(int argc, char* argv[])
 {
+
+	char* imagePrePath = "E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\";
+	char* resultPrePath = "E:\\SmartCity\\Result\\Result_13\\";
+	char* SVMDetectorPath = "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt";
+
 	if( 0 ) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
 		int trainFlag = train("E:\\SmartCity\\正样本\\Pos_Mixed\\", 290, 
-			"E:\\SmartCity\\负样本\\Neg_13\\64x128\\", 449, "E:\\SmartCity\\Result\\Result_13\\");
+			"E:\\SmartCity\\负样本\\未调整大小的负样本\\64_128\\", 1517, "E:\\SmartCity\\Result\\Result_13\\");
 	}
+	
+	
+	vector<float> SVMDetector = loadSVMDetector(SVMDetectorPath);
 
 	if( 1 ) //设置要不要检测
 	{
-		IplImage* img = NULL;
-		
-		img = cvLoadImage("E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\0005411.jpg");
-		//img = cvLoadImage("E:\\SmartCity\\004.jpg");
-		if(img == NULL)
+
+		char* namelistPath = new char[200];
+		strcpy(namelistPath, imagePrePath);
+		strcat(namelistPath, "Namelist.txt");
+
+
+		FILE* namelistIn = fopen(namelistPath, "r");  //打开文件，读入，返回返回指向FILE对象的指针
+		if(namelistIn == NULL)
 		{
-			
-			printf("没有图片\n");
-			system("pause");
-			return -1;
+			printf("Can not open namelist."); 
+			return 0;
 		}
-		pictureDetect(img, "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt");
+
+		char* imageName = new char [100]; //图像文件名
+		while(fscanf(namelistIn, "%s", imageName) > 0) //读取文件，遇到whitespace停止, 返回读取的字符个数
+		{
+			printf("\n");
+
+			char* imagePath = new char[200];
+			strcpy(imagePath, imagePrePath);
+			strcat(imagePath, imageName); //将第二个字符串拼接到第一个后面
+			printf("Open image: %s\n",imageName); //打印出完整文件名
+
+			IplImage* img = cvLoadImage(imagePath);
+			if(img == NULL)
+			{
+				printf("没有图片\n");
+				system("pause");
+				return -1;
+			}
+
+			img= detect(img, SVMDetector);
+
+			char* resultPath = new char[200];
+			strcpy(resultPath, resultPrePath);
+			strcat(resultPath, imageName);
+			cvSaveImage(resultPath, img);
+
+			delete[] imagePath;
+			delete[] resultPath;
+		}
+
+		delete[] namelistPath;
+		delete[] imageName;
+		fclose(namelistIn);
+
 	}
 
 	return 1;
@@ -265,39 +308,20 @@ int train(char* positivePath, int positiveSampleCount,
 	return 1;
 }
 
-void pictureDetect(IplImage* img, char* svmDetectorPath)
+
+IplImage* detect(IplImage* img, vector<float> SVMDetector)
 {	
 	time_t startTime = time(NULL);	//记录开始时间
-
-	//将文件中的数据读入到x中
-	vector<float> x;
-	ifstream fileIn(svmDetectorPath, ios::in);
-	float val = 0.0f;
-	while(!fileIn.eof())
-	{
-		fileIn >> val;
-		x.push_back(val);
-	}
-	fileIn.close();
-	
-	if (x.size() == 3781)
-		cout << svmDetectorPath << "分类器导入成功！" << endl;
-	else
-	{
-		cout << "分类器导入错误。" <<endl;
-		return;
-	}
 
 	cv::HOGDescriptor hog(cv::Size(64,128), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
 	// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), Size block_stride=Size(8, 8), 
 	// Size cell_size=Size(8, 8), int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
 	// bool gamma_correction=true, int nlevels=DEFAULT_NLEVELS)
-	hog.setSVMDetector(x); //训练的分类器
+	hog.setSVMDetector(SVMDetector); //训练的分类器
 //	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
 
-	//cvNamedWindow("img", 0);
 
-	cout << "正在检测图像！" << endl;
+	cout << "正在检测图像……" << endl;
 	vector<cv::Rect>  found; //存储检测结果
 	hog.detectMultiScale(img, found, 0.0, cv::Size(8,8), cv::Size(32,32), 1.05, 2);
 	// detectMultiScale(const GpuMat& img, vector<Rect>& found_locations, double hit_threshold=0, 
@@ -360,26 +384,200 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
             if(ii == found_NoMinus.size())
                found_NoNest.push_back(r);
 		}
-		cout << "去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
+		cout << "去边界框，去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
 
 
-		//去重叠
-		Vector<Rect> found_NoOverlap;
-		for (int i = 0; i < found_NoNest.size(); i++)
+		////去重叠
+		//Vector<Rect> found_NoOverlap;
+		//for (int i = 0; i < found_NoNest.size(); i++)
+		//{
+		//	MyRect rect1(found_NoNest[i]);
+		//	for(int j = 0; j < found_NoNest.size(); j++)
+		//	{
+		//		MyRect rect2(found_NoNest[j]);
+		//		MyRect rect3 = rect1 & rect2;
+
+
+
+		//		 
+
+		//	}
+		//}
+		//cout << "去重叠后，矩形框数目："<< found_NoOverlap.size() << endl;
+	
+
+
+		//在图像上画出矩形
+		for(int i = 0; i < found_NoNest.size(); i++)
 		{
-			MyRect rect1(found_NoNest[i]);
-			for(int j = 0; j < found_NoNest.size(); j++)
+			cvRectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
+
+			//在方框上标出编号
+			char* str = new char[100];
+			itoa(i, str, 10);
+			CvFont font;
+			cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
+				//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
+			cvPutText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
+			delete[] str;
+
+			/*Rect r = found[i];
+			r.x += cvRound(r.width*0.1);
+			r.width = cvRound(r.width*0.8);
+			r.y += cvRound(r.height*0.07);
+			r.height = cvRound(r.height*0.8);
+			rectangle(img, r.tl(), r.br(), Scalar(0,255,0), 3);*/
+		}
+
+
+
+	}
+
+	time_t endTime = time(NULL);	//记录结束时间
+	cout <<"检测所用时间：" << difftime(endTime, startTime) << "秒" << endl; //打印训练用时
+
+	return img;
+}
+
+vector<float> loadSVMDetector(char* path)
+{
+	vector<float> x;
+	ifstream fileIn(path, ios::in);
+	float val = 0.0f;
+	while(!fileIn.eof())
+	{
+		fileIn >> val;
+		x.push_back(val);
+	}
+	fileIn.close();
+
+	if (x.size() == 3781)
+		cout << path << "分类器导入成功！" << endl;
+	else
+	{
+		cout << "分类器导入错误。" <<endl;
+		system("pause");
+	}
+
+	return x;
+}
+
+
+void pictureDetect(IplImage* img, char* svmDetectorPath)
+{	
+	time_t startTime = time(NULL);	//记录开始时间
+
+	//将文件中的数据读入到x中
+	vector<float> x;
+	ifstream fileIn(svmDetectorPath, ios::in);
+	float val = 0.0f;
+	while(!fileIn.eof())
+	{
+		fileIn >> val;
+		x.push_back(val);
+	}
+	fileIn.close();
+	
+	if (x.size() == 3781)
+		cout << svmDetectorPath << "分类器导入成功！" << endl;
+	else
+	{
+		cout << "分类器导入错误。" <<endl;
+		return;
+	}
+
+	cv::HOGDescriptor hog(cv::Size(64,128), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
+	// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), Size block_stride=Size(8, 8), 
+	// Size cell_size=Size(8, 8), int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
+	// bool gamma_correction=true, int nlevels=DEFAULT_NLEVELS)
+	hog.setSVMDetector(x); //训练的分类器
+//	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());//自带的分类器
+
+	//cvNamedWindow("img", 0);
+
+	cout << "正在检测图像……" << endl;
+	vector<cv::Rect>  found; //存储检测结果
+	hog.detectMultiScale(img, found, 0.0, cv::Size(8,8), cv::Size(32,32), 1.05, 2);
+	// detectMultiScale(const GpuMat& img, vector<Rect>& found_locations, double hit_threshold=0, 
+	// Size win_stride=Size(), Size padding=Size(), double scale0=1.05, int group_threshold=2)
+
+
+	if (found.size() > 0) 
+	{
+		cout << "矩形框数目："<< found.size() << endl;
+
+		//// 保存样本截图
+		//for(int i = 0; i < found.size(); i++)
+		//{
+		//	if((found[i].x >= 0) && ((found[i].x + found[i].width) <= img->width) 
+		//		&& (found[i].y >= 0) && (found[i].y + found[i].height <= img->height))
+		//	{
+		//		char* name = new char[100]; //文件名
+		//		char* prePath = new char[200]; // 文件夹路径
+		//		itoa(i, name, 10);
+		//		strcat(name, ".png"); //构成文件名 i.png
+		//		strcpy(prePath, "E:\\SmartCity\\Result\\SaveDetectResult\\"); 
+		//		strcat(prePath, name); //形成完整路径
+
+		//		cout << prePath << endl;
+
+		//		/*IplImage * image = cvCreateImageHeader(cvSize(img.cols, img.rows), 8, 3);
+		//		image = cvGetImage(&img, image);*/
+		//		saveDetectResult(img, found[i], prePath); //保存截图
+		//		cout << prePath << " 保存完毕。" << endl;
+
+		//		delete[] name;
+		//		delete[] prePath;
+		//	}
+		//}
+
+
+		//去除在图像边缘上的方框
+		Vector<Rect> found_NoMinus;
+		for(int i = 0; i < found.size(); i++)
+		{
+			if(found[i].x > 0  &&  found[i].y > 0  &&  
+				found[i].x + found[i].width < 1920  &&  found[i].y + found[i].height < 1080)
 			{
-				MyRect rect2(found_NoNest[j]);
-				MyRect rect3 = rect1 & rect2;
-
-
-
-				 
-
+				found_NoMinus.push_back(found[i]);
 			}
 		}
-		cout << "去重叠后，矩形框数目："<< found_NoOverlap.size() << endl;
+
+
+		//去嵌套
+		Vector<Rect> found_NoNest;
+		int ii = 0;
+		for(int i = 0; i < found_NoMinus.size(); i++)
+		{
+			Rect r = found_NoMinus[i];
+			//下面的这个for语句是找出所有没有嵌套的矩形框r,并放入found_NoNest中,如果有嵌套的
+			//话,则取外面最大的那个矩形框放入found_NoNest中
+            for(ii = 0; ii <found_NoMinus.size(); ii++)
+                if(ii != i && (r&found_NoMinus[ii])==r)
+                    break;
+            if(ii == found_NoMinus.size())
+               found_NoNest.push_back(r);
+		}
+		cout << "去边界框，去嵌套后，矩形框数目："<< found_NoNest.size() << endl;
+
+
+		////去重叠
+		//Vector<Rect> found_NoOverlap;
+		//for (int i = 0; i < found_NoNest.size(); i++)
+		//{
+		//	MyRect rect1(found_NoNest[i]);
+		//	for(int j = 0; j < found_NoNest.size(); j++)
+		//	{
+		//		MyRect rect2(found_NoNest[j]);
+		//		MyRect rect3 = rect1 & rect2;
+
+
+
+		//		 
+
+		//	}
+		//}
+		//cout << "去重叠后，矩形框数目："<< found_NoOverlap.size() << endl;
 	
 
 
@@ -416,7 +614,7 @@ void pictureDetect(IplImage* img, char* svmDetectorPath)
 	cvShowImage("检测行人", img);
 	cout << "检测完成，已显示检测结果" << endl;
 
-	cvSaveImage("e:/SmartCity/ProcessedImage2.jpg", img, NULL);
+	cvSaveImage("e:/SmartCity/ProcessedImage4.jpg", img, NULL);
 	waitKey(0);
 
 	cvDestroyWindow("检测行人");

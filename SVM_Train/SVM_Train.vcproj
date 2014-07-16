@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\VS2008\VS2008_OpenCV245_x86_64_Debug.vsprops"
+			InheritedPropertySheets="..\..\..\VS2008_OpenCV245_x86_Debug.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -88,7 +88,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\VS2008\VS2008_OpenCV245_x86_64_Release.vsprops"
+			InheritedPropertySheets="..\..\..\VS2008_OpenCV245_x86_Release.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
