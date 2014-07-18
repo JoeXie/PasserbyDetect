@@ -23,26 +23,24 @@ IplImage* detect(IplImage* img, vector<float> SVMDetector);
 int main(int argc, char* argv[])
 {
 
-	char* posPrePath = "E:\\SmartCity\\正样本\\Pos_Mixed\\";
-	char* negPrePath = "E:\\SmartCity\\负样本\\未调整大小的负样本\\64_128\\";
-	char* trainResultPrePath = "E:\\SmartCity\\Result\\Result_13\\";
-
-	if( 0 ) //设置要不要训练
-	{
-		cout << "开始训练" << endl;
-		int trainFlag = train(posPrePath, 290, negPrePath, 1517, trainResultPrePath);
-	}
-	
-
+	char* posPrePath = "E:\\SmartCity\\64x64\\Pos\\";
+	char* negPrePath = "E:\\SmartCity\\64x64\\Neg\\";
+	char* trainResultPrePath = "E:\\SmartCity\\64x64\\";
 
 	char* imagePrePath = "E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\";
 	char* resultPrePath = "E:\\SmartCity\\Result\\Result_13\\";
 	char* SVMDetectorPath = "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt";
 
-	vector<float> SVMDetector = loadSVMDetector(SVMDetectorPath);
 
-	if( 1 ) //设置要不要检测
+	if( 1 ) //设置要不要训练
 	{
+		cout << "开始训练" << endl;
+		int trainFlag = train(posPrePath, 24, negPrePath, 14, trainResultPrePath);
+	}
+
+	if( 0 ) //设置要不要检测
+	{
+		vector<float> SVMDetector = loadSVMDetector(SVMDetectorPath);
 
 		char* namelistPath = new char[200];
 		strcpy(namelistPath, imagePrePath);
@@ -140,7 +138,7 @@ int train(char* positivePath, int positiveSampleCount,
 		Mat img = cv::imread(positiveImagePath);
 		if(img.data == NULL)
 		{
-			cout<<"negative image sample load error: "<<positiveImagePath<<endl;
+			cout<<"Positive image sample load error: "<<positiveImagePath<<endl;
 			continue;
 		}
 
