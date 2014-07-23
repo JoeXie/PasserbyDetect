@@ -5,6 +5,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train", "SVM_Train\SVM_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train_Head", "SVM_Train_Head\SVM_Train_Head.vcproj", "{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeleteBackground", "DeleteBackground\DeleteBackground.vcproj", "{073E83E9-2E01-4686-9442-0F9C49FBE12A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubBackGround", "SubBackGround\SubBackGround.vcproj", "{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -29,6 +33,18 @@ Global
 		{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}.Release|Win32.Build.0 = Release|Win32
 		{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}.Release|x64.ActiveCfg = Release|x64
 		{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}.Release|x64.Build.0 = Release|x64
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Debug|Win32.Build.0 = Debug|Win32
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Debug|x64.ActiveCfg = Debug|Win32
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Release|Win32.ActiveCfg = Release|Win32
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Release|Win32.Build.0 = Release|Win32
+		{073E83E9-2E01-4686-9442-0F9C49FBE12A}.Release|x64.ActiveCfg = Release|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Debug|Win32.Build.0 = Debug|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Debug|x64.ActiveCfg = Debug|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Release|Win32.ActiveCfg = Release|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Release|Win32.Build.0 = Release|Win32
+		{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

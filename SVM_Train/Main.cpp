@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
 
 	char* imagePrePath = "E:\\SmartCity\\数据集\\验证数据\\1_2_01_1\\hongsilounorth_13_1920x1080_30_R1\\";
-	char* resultPrePath = "E:\\SmartCity\\Result\\Result_13\\";
+	char* resultPrePath = "E:\\SmartCity\\数据集\\Resize_13\\";
 	char* SVMDetectorPath = "E:\\SmartCity\\Result\\Result_13\\SVMDetector.txt";
 
 	if( 0 ) //设置要不要训练
@@ -34,11 +34,12 @@ int main(int argc, char* argv[])
 			"E:\\SmartCity\\负样本\\未调整大小的负样本\\64_128\\", 1517, "E:\\SmartCity\\Result\\Result_13\\");
 	}
 	
+
 	
-	vector<float> SVMDetector = loadSVMDetector(SVMDetectorPath);
 
 	if( 1 ) //设置要不要检测
 	{
+		vector<float> SVMDetector = loadSVMDetector(SVMDetectorPath);
 
 		char* namelistPath = new char[200];
 		strcpy(namelistPath, imagePrePath);
@@ -70,12 +71,21 @@ int main(int argc, char* argv[])
 				return -1;
 			}
 
-			img= detect(img, SVMDetector);
+			//缩放
+			float scale = 0.5; 
+			CvSize dst_cvsize; 
+			dst_cvsize.width=img->width*scale;
+			dst_cvsize.height=img->height*scale;
+			IplImage *dst = cvCreateImage( dst_cvsize, img->depth, img->nChannels);  
+			cvResize(img, dst, CV_INTER_LINEAR); //双线性插值 
+
+
+			dst= detect(dst, SVMDetector);
 
 			char* resultPath = new char[200];
 			strcpy(resultPath, resultPrePath);
 			strcat(resultPath, imageName);
-			cvSaveImage(resultPath, img);
+			cvSaveImage(resultPath, dst);
 
 			delete[] imagePath;
 			delete[] resultPath;
@@ -136,7 +146,7 @@ int train(char* positivePath, int positiveSampleCount,
 		Mat img = cv::imread(positiveImagePath);
 		if(img.data == NULL)
 		{
-			cout<<"negative image sample load error: "<<positiveImagePath<<endl;
+			cout<<"Positive image sample load error: "<<positiveImagePath<<endl;
 			continue;
 		}
 
