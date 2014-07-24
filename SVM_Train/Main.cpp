@@ -17,7 +17,7 @@ int train(char* positivePath, int positiveSampleCount,
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 vector<float> loadSVMDetector(char* path);
-IplImage* detect(IplImage* img, vector<float> SVMDetector);
+Mat detect(Mat img, vector<float> SVMDetector);
 
 
 int main(int argc, char* argv[])
@@ -63,8 +63,8 @@ int main(int argc, char* argv[])
 			strcat(imagePath, imageName); //将第二个字符串拼接到第一个后面
 			printf("Open image: %s\n",imageName); //打印出完整文件名
 
-			IplImage* img = cvLoadImage(imagePath);
-			if(img == NULL)
+			Mat img = imread(imagePath);
+			if(img.data == NULL)
 			{
 				printf("没有图片\n");
 				system("pause");
@@ -73,19 +73,16 @@ int main(int argc, char* argv[])
 
 			//缩放
 			float scale = 0.5; 
-			CvSize dst_cvsize; 
-			dst_cvsize.width=img->width*scale;
-			dst_cvsize.height=img->height*scale;
-			IplImage *dst = cvCreateImage( dst_cvsize, img->depth, img->nChannels);  
-			cvResize(img, dst, CV_INTER_LINEAR); //双线性插值 
+			Mat dstImage;
+			resize(img, dstImage, Size(0, 0), scale, scale, INTER_LINEAR); //双线性插值 
 
 
-			dst= detect(dst, SVMDetector);
+			dstImage= detect(dstImage, SVMDetector);
 
 			char* resultPath = new char[200];
 			strcpy(resultPath, resultPrePath);
 			strcat(resultPath, imageName);
-			cvSaveImage(resultPath, dst);
+			imwrite(resultPath, dstImage);
 
 			delete[] imagePath;
 			delete[] resultPath;
@@ -318,7 +315,7 @@ int train(char* positivePath, int positiveSampleCount,
 }
 
 
-IplImage* detect(IplImage* img, vector<float> SVMDetector)
+Mat detect(Mat img, vector<float> SVMDetector)
 {	
 	time_t startTime = time(NULL);	//记录开始时间
 
@@ -419,16 +416,16 @@ IplImage* detect(IplImage* img, vector<float> SVMDetector)
 		//在图像上画出矩形
 		for(int i = 0; i < found_NoNest.size(); i++)
 		{
-			cvRectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
+			rectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
 
 			//在方框上标出编号
-			char* str = new char[100];
-			itoa(i, str, 10);
-			CvFont font;
-			cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
-				//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
-			cvPutText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
-			delete[] str;
+			//char* str = new char[100];
+			//itoa(i, str, 10);
+			//CvFont font;
+			//cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
+			//	//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
+			//putText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
+			//delete[] str;
 
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
