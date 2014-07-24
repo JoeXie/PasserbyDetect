@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\OpenCV245\opencv\build\include;D:\OpenCV245\opencv\build\include\opencv;D:\OpenCV245\opencv\build\include\opencv2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opencv_videostab245.lib;opencv_core245.lib;opencv_flann245.lib;opencv_ml245.lib;opencv_imgproc245.lib;opencv_photo245.lib;opencv_video245.lib;opencv_highgui245.lib;opencv_features2d245.lib;opencv_objdetect245.lib;opencv_calib3d245.lib;opencv_ts245.lib;opencv_contrib245.lib;opencv_legacy245.lib;opencv_gpu245.lib;opencv_haartraining_engine.lib;opencv_nonfree245.lib;opencv_superres245.lib;opencv_stitching245.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\OpenCV245\opencv\build\x64\vc9\lib;D:\OpenCV245\opencv\build\x64\vc9\staticlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

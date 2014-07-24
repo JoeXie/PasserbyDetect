@@ -1,13 +1,15 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train", "SVM_Train\SVM_Train.vcproj", "{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train", "SVM_Train\SVM_Train.vcxproj", "{B5B98EEA-82F8-4C29-B88D-67E60F9D2B1D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train_Head", "SVM_Train_Head\SVM_Train_Head.vcproj", "{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SVM_Train_Head", "SVM_Train_Head\SVM_Train_Head.vcxproj", "{3A83A85C-6482-4C8F-8FAE-CD8F33C92BD4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeleteBackground", "DeleteBackground\DeleteBackground.vcproj", "{073E83E9-2E01-4686-9442-0F9C49FBE12A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeleteBackground", "DeleteBackground\DeleteBackground.vcxproj", "{073E83E9-2E01-4686-9442-0F9C49FBE12A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubBackGround", "SubBackGround\SubBackGround.vcproj", "{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubBackGround", "SubBackGround\SubBackGround.vcxproj", "{C7448278-BF5E-49EB-BBEE-BDE850FB91E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
