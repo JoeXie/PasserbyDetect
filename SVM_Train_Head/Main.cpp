@@ -15,27 +15,27 @@ using namespace cv;
 //函数声明
 int train(char* positivePath, int positiveSampleCount, 
 		  char* negativePath, int negativeSampleCount, char* classifierSavePath);
-void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
+void saveDetectResult(Mat& img, CvRect rect, char* savePath);
 vector<float> loadSVMDetector(char* path);
-IplImage* detect(IplImage* img, vector<float> SVMDetector);
+Mat& detect(Mat& img, vector<float> SVMDetector);
 
 
 int main(int argc, char* argv[])
 {
 
-	char* posPrePath = "E:\\SmartCity\\HeadDetection\\Pos\\64x64\\";
-	char* negPrePath = "E:\\SmartCity\\HeadDetection\\Neg\\64x64\\";
-	char* trainResultPrePath = "E:\\SmartCity\\HeadDetection\\";
+	char* posPrePath = "E:\\SmartCity\\HeadDetection\\Pos\\32x32\\";
+	char* negPrePath = "E:\\SmartCity\\HeadDetection\\Neg\\negdata\\32x32\\";
+	char* trainResultPrePath = "E:\\SmartCity\\HeadDetection\\Result\\";
 
-	char* imagePrePath = "E:\\SmartCity\\正样本\\Pos_13\\";
+	char* imagePrePath = "E:\\SmartCity\\HeadDetection\\Data\\";
 	char* resultPrePath = "E:\\SmartCity\\HeadDetection\\Result\\";
-	char* SVMDetectorPath = "E:\\SmartCity\\HeadDetection\\SVMDetector.txt";
+	char* SVMDetectorPath = "E:\\SmartCity\\HeadDetection\\Result\\\\SVMDetector.txt";
 
 
 	if( 1 ) //设置要不要训练
 	{
 		cout << "开始训练" << endl;
-		int trainFlag = train(posPrePath, 70, negPrePath, 70, trainResultPrePath);
+		int trainFlag = train(posPrePath, 70, negPrePath, 700, trainResultPrePath);
 	}
 
 	if( 1 ) //设置要不要检测
@@ -64,20 +64,25 @@ int main(int argc, char* argv[])
 			strcat(imagePath, imageName); //将第二个字符串拼接到第一个后面
 			printf("Open image: %s\n",imageName); //打印出完整文件名
 
-			IplImage* img = cvLoadImage(imagePath);
-			if(img == NULL)
+			Mat srcImage = cvLoadImage(imagePath);
+			if(srcImage.data == NULL)
 			{
 				printf("没有图片\n");
 				system("pause");
 				return -1;
 			}
 
-			img= detect(img, SVMDetector);
+			//缩放
+			float scale = 1.2;
+			Mat dstImage;
+			resize(srcImage, dstImage, Size(0, 0), scale, scale, INTER_LINEAR); //双线性插值 
+
+			dstImage = detect(dstImage, SVMDetector);
 
 			char* resultPath = new char[200];
 			strcpy(resultPath, resultPrePath);
 			strcat(resultPath, imageName);
-			cvSaveImage(resultPath, img);
+			imwrite(resultPath, dstImage);
 
 			delete[] imagePath;
 			delete[] resultPath;
@@ -103,7 +108,7 @@ int train(char* positivePath, int positiveSampleCount,
 	cout<<"positiveSampleCount: "<<positiveSampleCount<<endl;
 	cout<<"negativeSampleCount: "<<negativeSampleCount<<endl;
 
-	CvMat *sampleFeaturesMat = cvCreateMat(totalSampleCount , 1764, CV_32FC1);
+	CvMat *sampleFeaturesMat = cvCreateMat(totalSampleCount , 324, CV_32FC1);
 	//64*128的训练样本，该矩阵将是totalSample*3780,64*64的训练样本，该矩阵将是totalSample*1764
 	cvSetZero(sampleFeaturesMat);  
 	CvMat *sampleLabelMat = cvCreateMat(totalSampleCount, 1, CV_32FC1);//样本标识  
@@ -139,10 +144,11 @@ int train(char* positivePath, int positiveSampleCount,
 		if(img.data == NULL)
 		{
 			cout<<"Positive image sample load error: "<<positiveImagePath<<endl;
+			system("pause");
 			continue;
 		}
 
-		cv::HOGDescriptor hog(cv::Size(64,64), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
+		cv::HOGDescriptor hog(cv::Size(32,32), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
 		// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), 
 		// Size block_stride=Size(8, 8), Size cell_size=Size(8, 8), int nbins=9, 
 		// double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
@@ -196,10 +202,11 @@ int train(char* positivePath, int positiveSampleCount,
 		if(img.data == NULL)
 		{
 			cout<<"negative image sample load error: "<<negativeImagePath<<endl;
+			system("pause");
 			continue;
 		}
 
-		cv::HOGDescriptor hog(cv::Size(64,64), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);  
+		cv::HOGDescriptor hog(cv::Size(32,32), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);  
 		vector<float> featureVec; 
 
 		hog.compute(img,featureVec,cv::Size(8,8));//计算HOG特征
@@ -254,9 +261,9 @@ int train(char* positivePath, int positiveSampleCount,
 	cout<<"************************ end of training for SVM ******************"<<endl;
 
 	CvMat *sv,*alp,*re;//所有样本特征向量 
-	sv  = cvCreateMat(supportVectorCount , 1764, CV_32FC1);
+	sv  = cvCreateMat(supportVectorCount , 324, CV_32FC1);
 	alp = cvCreateMat(1 , supportVectorCount, CV_32FC1);
-	re  = cvCreateMat(1 , 1764, CV_32FC1);
+	re  = cvCreateMat(1 , 324, CV_32FC1);
 	CvMat *res  = cvCreateMat(1 , 1, CV_32FC1);
 
 	cvSetZero(sv);
@@ -264,7 +271,7 @@ int train(char* positivePath, int positiveSampleCount,
   
 	for(int i=0; i<supportVectorCount; i++)
 	{
-		memcpy( (float*)(sv->data.fl+i*1764), svm.get_support_vector(i), 1764*sizeof(float));	//复制特征向量
+		memcpy( (float*)(sv->data.fl+i*324), svm.get_support_vector(i), 324*sizeof(float));	//复制特征向量
 	}
 
 	double* alphaArr = svm.get_alpha();   
@@ -277,7 +284,7 @@ int train(char* positivePath, int positiveSampleCount,
 	cvMatMul(alp, sv, re);	//re = alp*sv
 
 	int posCount = 0;
-	for (int i=0; i<1764; i++)
+	for (int i=0; i<324; i++)
 	{
 		re->data.fl[i] *= -1;
 	}
@@ -291,7 +298,7 @@ int train(char* positivePath, int positiveSampleCount,
 	{
 		return 1;
 	}
-	for(int i=0; i<1764; i++)
+	for(int i=0; i<324; i++)
 	{
 		fprintf(fp,"%f \n",re->data.fl[i]);
 	}
@@ -310,11 +317,11 @@ int train(char* positivePath, int positiveSampleCount,
 }
 
 
-IplImage* detect(IplImage* img, vector<float> SVMDetector)
+Mat& detect(Mat& img, vector<float> SVMDetector)
 {	
 	time_t startTime = time(NULL);	//记录开始时间
 
-	cv::HOGDescriptor hog(cv::Size(64,64), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
+	cv::HOGDescriptor hog(cv::Size(32,32), cv::Size(16,16), cv::Size(8,8), cv::Size(8,8), 9);
 	// HOGDescriptor(Size win_size=Size(64, 128), Size block_size=Size(16, 16), Size block_stride=Size(8, 8), 
 	// Size cell_size=Size(8, 8), int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA, double threshold_L2hys=0.2, 
 	// bool gamma_correction=true, int nlevels=DEFAULT_NLEVELS)
@@ -411,15 +418,14 @@ IplImage* detect(IplImage* img, vector<float> SVMDetector)
 		//在图像上画出矩形
 		for(int i = 0; i < found_NoNest.size(); i++)
 		{
-			cvRectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
+			rectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
 
 			//在方框上标出编号
 			char* str = new char[100];
 			itoa(i, str, 10);
-			CvFont font;
-			cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
-				//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
-			cvPutText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
+			putText(img, str, found_NoNest[i].br(), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255)); //画出编号
+				//void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, 
+				//Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
 			delete[] str;
 
 			/*Rect r = found[i];
@@ -452,7 +458,7 @@ vector<float> loadSVMDetector(char* path)
 	}
 	fileIn.close();
 
-	if (x.size() == 1765)
+	if (x.size() == 325)
 		cout << path << "分类器导入成功！" << endl;
 	else
 	{
@@ -464,15 +470,3 @@ vector<float> loadSVMDetector(char* path)
 }
 
 
-
-void saveDetectResult(IplImage* img, CvRect rect, char* savePath)
-{
-	CvMat *subMat = cvCreateMatHeader(rect.width, rect.height, CV_8UC3); //创建一个rect.width * rect.height的矩阵头
-
-	subMat = cvGetSubRect(img, subMat, rect); //pImg为指向图像的指针，subMat指向存储所接图像的矩阵，返回值和subMat相等
-
-	IplImage *subImg = cvCreateImageHeader(cvSize(rect.width, rect.height), 8, 3); //创建一个rect.width * rect.height的图像头
-	cvGetImage(subMat, subImg); //subMat为存储数据的矩阵，SubImg指向图像，返回值与SubImg相等
-
-	cvSaveImage(savePath, subImg, 0);
-}
