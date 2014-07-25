@@ -2,10 +2,10 @@
 #include "Mysvm.h"
 #include "MyRect.h"
 
-#include <ml.h>  
-#include <iostream>  
-#include <fstream>  
-#include <string>  
+#include <ml.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <vector>
 #include <time.h>
 
@@ -13,7 +13,7 @@ using namespace std;
 using namespace cv;
 
 //函数声明
-int train(char* positivePath, int positiveSampleCount, 
+int train(char* positivePath, int positiveSampleCount,
 	char* negativePath, int negativeSampleCount, char* classifierSavePath);
 void saveDetectResult(IplImage* img, CvRect rect, char* savePath);
 vector<float> loadSVMDetector(char* path);
@@ -419,13 +419,12 @@ Mat detect(Mat img, vector<float> SVMDetector)
 			rectangle(img, found_NoNest[i].tl(), found_NoNest[i].br(), Scalar(0,255,0), 3);
 
 			//在方框上标出编号
-			//char* str = new char[100];
-			//itoa(i, str, 10);
-			//CvFont font;
-			//cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 1.0, 1.0, 0, 2, 8);
-			//	//初始化文字对象 http://docs.opencv.org/2.4.5/modules/core/doc/drawing_functions.html?highlight=cvfont#initfont
-			//putText(img, str, found_NoNest[i].br(), &font, Scalar(0, 0, 255)); //画出编号
-			//delete[] str;
+			char* str = new char[100];
+			itoa(i, str, 10);
+			putText(img, str, found_NoNest[i].br(), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255)); //画出编号
+			//void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, 
+			//Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
+			delete[] str;
 
 			/*Rect r = found[i];
 			r.x += cvRound(r.width*0.1);
