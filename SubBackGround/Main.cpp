@@ -10,8 +10,8 @@ int main(int argc, char **argv)
 	//1. 打开图片
 	Mat modelImage = imread("");
 	Mat image = imread("");
-	if (modelImage.data == NULL) {printf("打开模板图片错误！\n"); return false}
-	if (image.data == NULL) {printf("打开待处理图片错误！\n"); return false}
+	if (modelImage.data == NULL)	{ printf("打开模板图片错误！\n"); return false; }
+	if (image.data == NULL)		{ printf("打开待处理图片错误！\n"); return false; }
 
 	namedWindow("Before", WINDOW_NORMAL);
 	imshow("Before", image);
